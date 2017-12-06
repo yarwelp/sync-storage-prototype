@@ -207,8 +207,8 @@ impl ListManager {
         let query = r#"[:find ?date
             :in ?a ?uuid
             :where
-            [?eid ?a ?date]
             [?eid :item/uuid ?uuid]
+            [?eid ?a ?date]
         ]"#;
         let result = self.store.query_args(&query, vec![(Variable::from_valid_name("?a"), NamespacedKeyword::new("item", attr).to_typed_value()), (Variable::from_valid_name("?uuid"), item_id.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
@@ -220,18 +220,16 @@ impl ListManager {
     }
 
     pub fn create_item(&mut self, item: &Item) -> Result<Uuid, list_errors::Error> {
-        let label_str = item.labels.iter().filter_map(|label| {
-            if label.id.is_some() {
-                Some(format!("{}",label.id.to_owned().unwrap().id))
-            } else {
-                None
-            }
-        }).collect::<Vec<String>>().join(", ");
+        let label_str = item.labels.iter()
+                            .filter(|label| label.id.is_some() )
+                            .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                            .collect::<Vec<String>>()
+                            .join(", ");
         let tmp_uuid = uuid::Uuid::new_v4().hyphenated().to_string();
         let item_uuid = Uuid::parse_str(&tmp_uuid).unwrap();
         let mut query = format!(r#"[{{
-            :item/uuid #uuid "{0}"
-            :item/name "{1}"
+            :item/uuid #uuid {:?}
+            :item/name {:?}
             "#, &item_uuid.hyphenated().to_string(), &(item.name));
         if let Some(due_date) = item.due_date {
             let micro_seconds = due_date.sec * 1000000;
@@ -289,17 +287,19 @@ impl ListManager {
         if let Some(new_labels) = labels {
             let existing_labels = self.fetch_labels_for_item(&(item.uuid)).unwrap_or(vec![]);
 
-            let labels_to_add = new_labels.iter().filter(|label| !existing_labels.contains(label) ).map(|label| {
-                let label_id = label.id.to_owned().unwrap().id;
-                format!("{}", label_id)
-            }).collect::<Vec<String>>().join(", ");
+            let labels_to_add = new_labels.iter()
+                                        .filter(|label| !existing_labels.contains(label) && label.id.is_some() )
+                                        .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                                        .collect::<Vec<String>>()
+                                        .join(", ");
             if !labels_to_add.is_empty() {
                 transaction.push(format!("[:db/add {0} :item/label [{1}]]", &item_id.id, labels_to_add));
             }
-            let labels_to_remove = existing_labels.iter().filter(|label| !new_labels.contains(label) ).map(|label| {
-                let label_id = label.id.to_owned().unwrap().id;
-                format!("{}", label_id)
-            }).collect::<Vec<String>>().join(", ");
+            let labels_to_remove = existing_labels.iter()
+                                        .filter(|label| !new_labels.contains(label) && label.id.is_some() )
+                                        .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                                        .collect::<Vec<String>>()
+                                        .join(", ");
             if !labels_to_remove.is_empty() {
                 transaction.push(format!("[:db/retract {0} :item/label [{1}]]", &item_id.id, labels_to_remove));
             }

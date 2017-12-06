@@ -99,6 +99,12 @@ impl ToTypedValue for Entity {
     }
 }
 
+impl Into<i64> for Entity {
+    fn into(self) -> i64 {
+        self.id
+    }
+}
+
 impl ToTypedValue for NamespacedKeyword {
     fn to_typed_value(&self) -> TypedValue {
         TypedValue::Keyword(Rc::new(self.clone()))
