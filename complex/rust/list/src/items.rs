@@ -15,6 +15,14 @@ use std::os::raw::{
 };
 use std::ptr;
 
+pub use edn::{
+    DateTime,
+    Utc,
+};
+use mentat_core::{
+    TypedValue,
+    Uuid,
+};
 use time::Timespec;
 
 use ffi_utils::strings::{
@@ -22,10 +30,15 @@ use ffi_utils::strings::{
     c_char_to_string,
 };
 use labels::Label;
+use store::{
+    Entity,
+    ToInner
+};
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Item {
-    pub uuid: String,
+    pub id: Option<Entity>,
+    pub uuid: Uuid,
     pub name: String,
     pub due_date: Option<Timespec>,
     pub completion_date: Option<Timespec>,
@@ -38,15 +51,23 @@ impl Drop for Item {
     }
 }
 
+impl Item {
+    pub fn from_row(row: &Vec<TypedValue>) -> Option<Item> {
+        let item = Item {
+            id: row[0].clone().to_inner(),
+            uuid: row[1].clone().to_inner(),
+            name: row[2].clone().to_inner(),
+            due_date: row[3].clone().to_inner(),
+            completion_date: row[4].clone().to_inner(),
+            labels: vec![]
+        };
+        Some(item)
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn item_new() -> *mut Item {
-    let item = Item{
-        uuid: "".to_string(),
-        name: "".to_string(),
-        due_date: None,
-        completion_date: None,
-        labels: vec![]
-    };
+    let item = Item::default();
     let boxed_item = Box::new(item);
     Box::into_raw(boxed_item)
 }
@@ -73,11 +94,9 @@ pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> *mut i64 {
     let item = &*item;
     match item.due_date {
         Some(date) => {
-            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.name);
             Box::into_raw(Box::new(date.sec))
         },
         None => {
-            println!("item_get_due_date: returning null_mut for {:?}", item.name);
             ptr::null_mut()
         }
     }
@@ -99,11 +118,9 @@ pub unsafe extern "C" fn item_get_completion_date(item: *const Item) -> *mut i64
     let item = &*item;
     match item.completion_date {
         Some(date) => {
-            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.name);
             Box::into_raw(Box::new(date.sec))
         },
         None => {
-            println!("item_get_due_date: returning null_mut for {:?}", item.name);
             ptr::null_mut()
         }
     }
@@ -140,3 +157,4 @@ pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: siz
     let label = Box::new(label_list[index].clone());
     Box::into_raw(label)
 }
+
