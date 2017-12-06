@@ -2,6 +2,7 @@
 name = "store"
 version = "0.1.0"
 authors = ["Emily Toop <etoop@mozilla.com>"]
+workspace = ".."
 
 [dependencies]
 error-chain = { git = "https://github.com/rnewman/error-chain", branch = "rnewman/sync" }

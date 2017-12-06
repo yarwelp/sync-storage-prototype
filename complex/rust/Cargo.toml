@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Emily Toop <etoop@mozilla.com>"]
 description = "Cross Platform Library for providing To Do List data"
 
+[workspace]
+
 [lib]
 name = "toodle"
 crate-type = ["staticlib", "cdylib"]
