@@ -24,7 +24,7 @@ extern crate ffi_utils;
 use libc::size_t;
 use std::os::raw::c_char;
 use std::sync::Arc;
-
+use edn::NamespacedKeyword;
 use mentat::query::{
     QueryResults,
     Variable,
@@ -105,7 +105,7 @@ impl ListManager {
     }
 
     pub fn fetch_labels(&self) -> Result<Vec<Label>, list_errors::Error> {
-        let query = r#"[:find [?eid, ?name, ?color]
+        let query = r#"[:find ?eid, ?name, ?color
             :where
             [?eid :label/name ?name]
             [?eid :label/color ?color]
@@ -176,13 +176,9 @@ impl ListManager {
         ]"#;
         let result = self.store.query_args(query, vec![(Variable::from_valid_name("?label"), label.name.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
-            Ok(rows.iter().filter_map(|row| {
-                let uuid: Uuid = row[0].to_owned().to_inner();
-                self.fetch_item(&uuid).unwrap_or(None)
-            }).collect())
+            Ok(rows.iter().filter_map(|row| row.first()).filter_map(|uuid| self.fetch_item(&uuid.to_inner()).unwrap_or(None)).collect())
         } else {
-            println!("no items for label {:?}", label.name);
-            Ok(vec![])
+            bail!(list_errors::ErrorKind::UnexpectedResultType("Expected Rel result type".to_string()));
         }
     }
 
@@ -213,20 +209,15 @@ impl ListManager {
     }
 
     fn fetch_date_for_item(&self, attr: &str, item_id: &Uuid) -> Result<Option<Timespec>, list_errors::Error> {
-        let query = r#"[:find ?val
+        let query = r#"[:find ?date
             :in ?a ?uuid
             :where
-            [?eid ?a ?val]
+            [?eid ?a ?date]
             [?eid :item/uuid ?uuid]
         ]"#;
-        let result = self.store.query_args(&query, vec![(Variable::from_valid_name("?a"), attr.to_typed_value()), (Variable::from_valid_name("?uuid"), item_id.to_typed_value())])?;
+        let result = self.store.query_args(&query, vec![(Variable::from_valid_name("?a"), NamespacedKeyword::new("item", attr).to_typed_value()), (Variable::from_valid_name("?uuid"), item_id.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
-            if let Some(row) = rows.first() {
-                let date: Option<Timespec> = row[0].clone().to_inner();
-                Ok(date)
-            } else {
-                Ok(None)
-            }
+            Ok(rows.first().map(|row| row.first()).map(|ts| ts.to_inner().unwrap()))
         } else {
             Ok(None)
         }

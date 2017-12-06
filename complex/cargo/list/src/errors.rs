@@ -20,4 +20,11 @@ error_chain! {
     links {
         StoreError(store_error::Error, store_error::ErrorKind);
     }
+
+    errors {
+        UnexpectedResultType(message: String) {
+            description("An unexpected Result type was encountered")
+            display("{}", message)
+        }
+    }
 }

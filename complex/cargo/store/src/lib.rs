@@ -31,6 +31,7 @@ use std::rc::Rc;
 use edn::{
     DateTime,
     FromMicros,
+    NamespacedKeyword,
     Utc,
     Uuid
 };
@@ -81,7 +82,7 @@ pub struct Entity {
 }
 
 impl Entity {
-    fn new(id: Entid) -> Entity {
+    pub fn new(id: Entid) -> Entity {
         Entity { id: id}
     }
 }
@@ -95,6 +96,12 @@ impl std::fmt::Display for Entity {
 impl ToTypedValue for Entity {
     fn to_typed_value(&self) -> TypedValue {
         TypedValue::Ref(self.id.clone())
+    }
+}
+
+impl ToTypedValue for NamespacedKeyword {
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::Keyword(Rc::new(self.clone()))
     }
 }
 
@@ -177,6 +184,28 @@ impl ToInner<Option<Timespec>> for TypedValue {
                 Some(Timespec::new(timestamp, 0))
             },
             _ => None,
+        }
+    }
+}
+
+impl<'a> ToInner<Option<Timespec>> for Option<&'a TypedValue> {
+    fn to_inner(self) -> Option<Timespec> {
+        match self {
+            Some(&TypedValue::Instant(v)) => {
+                let timestamp = v.timestamp();
+                Some(Timespec::new(timestamp, 0))
+            },
+            _ => None,
+        }
+    }
+}
+
+
+impl<'a> ToInner<Uuid> for &'a TypedValue {
+    fn to_inner(self) -> Uuid {
+        match self {
+            &TypedValue::Uuid(u) => u,
+            _ => Uuid::nil(),
         }
     }
 }
