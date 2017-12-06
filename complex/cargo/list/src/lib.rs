@@ -53,8 +53,8 @@ impl ListManager {
         let mut manager = ListManager {
             store: store,
         };
-        manager.create_labels_table()?;
-        manager.create_items_table()?;
+        manager.transact_labels_vocabulary()?;
+        manager.transact_items_vocabulary()?;
         Ok(manager)
     }
 
@@ -62,7 +62,7 @@ impl ListManager {
         Arc::get_mut(&mut self.store).unwrap()
     }
 
-    pub fn create_labels_table(&mut self) -> Result<(), list_errors::Error> {
+    pub fn transact_labels_vocabulary(&mut self) -> Result<(), list_errors::Error> {
         let schema = r#"[{  :db/ident     :label/name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
@@ -132,7 +132,7 @@ impl ListManager {
         }
     }
 
-    pub fn create_items_table(&mut self) -> Result<(), list_errors::Error> {
+    pub fn transact_items_vocabulary(&mut self) -> Result<(), list_errors::Error> {
         let schema = r#"[
         {   :db/ident       :item/uuid
             :db/valueType   :db.type/uuid
@@ -149,8 +149,13 @@ impl ListManager {
         {   :db/ident       :item/completion_date
             :db/valueType   :db.type/instant
             :db/cardinality :db.cardinality/one  },
+<<<<<<< HEAD
         {   :db/ident       :item/label
             :db/valueType   :db.type/ref
+=======
+        {  :db/ident     :item/label
+            :db/valueType :db.type/ref
+>>>>>>> rename schema creation functions
             :db/cardinality :db.cardinality/many }]"#;
         let _ = self.write_connection().transact(schema)?;
         Ok(())
