@@ -51,9 +51,22 @@ impl Drop for Item {
     }
 }
 
+impl Default for Item {
+    fn default() -> Self {
+        Item {
+            id: None,
+            uuid: Uuid::nil(),
+            name: String::new(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![]
+        }
+    }
+}
+
 impl Item {
     pub fn from_row(row: &Vec<TypedValue>) -> Option<Item> {
-        let item = Item{
+        let item = Item {
             id: row[0].clone().to_inner(),
             uuid: row[1].clone().to_inner(),
             name: row[2].clone().to_inner(),
@@ -67,14 +80,7 @@ impl Item {
 
 #[no_mangle]
 pub extern "C" fn item_new() -> *mut Item {
-    let item = Item{
-        id: None,
-        uuid: Uuid::nil(),
-        name: String::new(),
-        due_date: None,
-        completion_date: None,
-        labels: vec![]
-    };
+    let item = Item::default();
     let boxed_item = Box::new(item);
     Box::into_raw(boxed_item)
 }
