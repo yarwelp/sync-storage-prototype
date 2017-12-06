@@ -35,7 +35,7 @@ use store::{
     ToInner
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Item {
     pub id: Option<Entity>,
     pub uuid: Uuid,
@@ -48,19 +48,6 @@ pub struct Item {
 impl Drop for Item {
     fn drop(&mut self) {
         println!("{:?} is being deallocated", self);
-    }
-}
-
-impl Default for Item {
-    fn default() -> Self {
-        Item {
-            id: None,
-            uuid: Uuid::nil(),
-            name: String::new(),
-            due_date: None,
-            completion_date: None,
-            labels: vec![]
-        }
     }
 }
 

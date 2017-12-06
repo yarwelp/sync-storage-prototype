@@ -21,7 +21,7 @@ use store::{
     ToInner
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Label {
     pub id: Option<Entity>,    // id should not be leaked outside of the library
     pub name: String,

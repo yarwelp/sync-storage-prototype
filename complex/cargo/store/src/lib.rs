@@ -18,8 +18,6 @@ extern crate mentat_db;
 extern crate ordered_float;
 extern crate rusqlite;
 extern crate time;
-extern crate uuid;
-
 extern crate ffi_utils;
 
 use std::fmt;
@@ -33,26 +31,34 @@ use edn::{
     FromMicros,
     NamespacedKeyword,
     Utc,
-    Uuid
 };
+
 use mentat::{
     new_connection,
 };
+
 use mentat::conn::Conn;
+
 use mentat_core::{
     Entid,
     TypedValue,
+    Uuid,
 };
+
 use mentat_db::types::TxReport;
+
 use mentat::query::{
     QueryInputs,
     QueryResults,
     Variable,
 };
+
 use ordered_float::OrderedFloat;
+
 use rusqlite::{
     Connection
 };
+
 use time::Timespec;
 
 pub mod errors;
@@ -76,7 +82,7 @@ impl<'a> ToTypedValue for &'a str {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entity {
     pub id: Entid
 }
@@ -99,33 +105,33 @@ impl ToTypedValue for Entity {
     }
 }
 
-impl Into<i64> for Entity {
-    fn into(self) -> i64 {
+impl Into<Entid> for Entity {
+    fn into(self) -> Entid {
         self.id
     }
 }
 
 impl ToTypedValue for NamespacedKeyword {
     fn to_typed_value(&self) -> TypedValue {
-        TypedValue::Keyword(Rc::new(self.clone()))
+        self.clone().into()
     }
 }
 
 impl ToTypedValue for bool {
     fn to_typed_value(&self) -> TypedValue {
-        TypedValue::Boolean(self.clone())
+        (*self).into()
     }
 }
 
 impl ToTypedValue for i64 {
     fn to_typed_value(&self) -> TypedValue {
-        TypedValue::Long(self.clone())
+        TypedValue::Long(*self)
     }
 }
 
 impl ToTypedValue for f64 {
     fn to_typed_value(&self) -> TypedValue {
-        TypedValue::Double(OrderedFloat(self.clone()))
+        TypedValue::Double(OrderedFloat(*self))
     }
 }
 
@@ -136,9 +142,9 @@ impl ToTypedValue for Timespec {
     }
 }
 
-impl ToTypedValue for mentat_core::Uuid {
+impl ToTypedValue for Uuid {
     fn to_typed_value(&self) -> TypedValue {
-        TypedValue::Uuid(self.clone())
+        self.clone().into()
     }
 }
 
