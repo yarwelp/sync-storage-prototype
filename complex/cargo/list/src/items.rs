@@ -171,12 +171,3 @@ pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: siz
     Box::into_raw(label)
 }
 
-
-#[cfg(test)]
-mod test {
-
-    #[test]
-    fn test_new_item() {
-
-    }
-}
