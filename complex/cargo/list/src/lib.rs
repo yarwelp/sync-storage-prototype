@@ -154,13 +154,8 @@ impl ListManager {
         {   :db/ident       :item/completion_date
             :db/valueType   :db.type/instant
             :db/cardinality :db.cardinality/one  },
-<<<<<<< HEAD
-        {   :db/ident       :item/label
-            :db/valueType   :db.type/ref
-=======
         {  :db/ident     :item/label
             :db/valueType :db.type/ref
->>>>>>> rename schema creation functions
             :db/cardinality :db.cardinality/many }]"#;
         let _ = self.write_connection().transact(schema)?;
         Ok(())
