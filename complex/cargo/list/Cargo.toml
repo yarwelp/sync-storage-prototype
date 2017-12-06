@@ -14,15 +14,15 @@ uuid = { version = "0.5", features = ["v4"] }
 
 [dependencies.edn]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.mentat]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.mentat_core]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.store]
 path = "../store"

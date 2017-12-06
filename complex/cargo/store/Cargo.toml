@@ -19,23 +19,23 @@ features = ["bundled", "limits"]
 
 [dependencies.mentat]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.edn]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.mentat_query]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.mentat_core]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.mentat_db]
 git = "https://github.com/mozilla/mentat.git"
-rev = "5558820"
+branch = "master"
 
 [dependencies.ffi-utils]
 path = "../ffi-utils"
