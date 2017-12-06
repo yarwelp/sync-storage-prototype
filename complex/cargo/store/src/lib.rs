@@ -60,18 +60,18 @@ use ffi_utils::strings::c_char_to_string;
 use errors as store_errors;
 
 pub trait ToTypedValue {
-    fn to_typed_value(&self) -> Result<TypedValue, ()>;
-}
-
-impl<'a> ToTypedValue for &'a String {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::String(Rc::new((*self).to_owned())))
-    }
+    fn to_typed_value(&self) -> TypedValue;
 }
 
 impl ToTypedValue for String {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::String(Rc::new((*self).to_owned())))
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::String(Rc::new(self.clone()))
+    }
+}
+
+impl<'a> ToTypedValue for &'a str {
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::String(Rc::new(self.to_string()))
     }
 }
 
@@ -93,39 +93,39 @@ impl std::fmt::Display for Entity {
 }
 
 impl ToTypedValue for Entity {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Ref(self.id.clone()))
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::Ref(self.id.clone())
     }
 }
 
-impl<'a> ToTypedValue for &'a bool {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Boolean((*self).to_owned()))
+impl ToTypedValue for bool {
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::Boolean(self.clone())
     }
 }
 
-impl<'a> ToTypedValue for &'a i64 {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Long((*self).to_owned()))
+impl ToTypedValue for i64 {
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::Long(self.clone())
     }
 }
 
-impl<'a> ToTypedValue for &'a f64 {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Double(OrderedFloat((*self).to_owned())))
+impl ToTypedValue for f64 {
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::Double(OrderedFloat(self.clone()))
     }
 }
 
-impl<'a> ToTypedValue for &'a Timespec {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+impl ToTypedValue for Timespec {
+    fn to_typed_value(&self) -> TypedValue {
         let micro_seconds = (self.sec * 1000000) + i64::from((self.nsec * 1000));
-        Ok(TypedValue::Instant(DateTime::<Utc>::from_micros(micro_seconds)))
+        TypedValue::Instant(DateTime::<Utc>::from_micros(micro_seconds))
     }
 }
 
-impl<'a> ToTypedValue for &'a mentat_core::Uuid {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Uuid((*self).to_owned()))
+impl ToTypedValue for mentat_core::Uuid {
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::Uuid(self.clone())
     }
 }
 
@@ -227,13 +227,8 @@ impl Store {
         Ok(self.conn.q_once(&self.handle, query, None)?)
     }
 
-    pub fn query_args<T>(&self, query: &str, inputs: &[&(&str, &T)]) ->  Result<QueryResults, store_errors::Error>
-        where T: ToTypedValue {
-        let mut ee = vec![];
-        for &&(ref arg, ref val) in inputs.iter() {
-            ee.push((Variable::from_valid_name(&arg), val.to_typed_value().ok().unwrap()));
-        }
-        let i = QueryInputs::with_value_sequence(ee);
+    pub fn query_args(&self, query: &str, inputs: Vec<(Variable, TypedValue)>) ->  Result<QueryResults, store_errors::Error> {
+        let i = QueryInputs::with_value_sequence(inputs);
         Ok(self.conn.q_once(&self.handle, query, i)?)
     }
 

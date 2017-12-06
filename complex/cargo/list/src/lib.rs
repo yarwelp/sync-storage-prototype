@@ -25,7 +25,10 @@ use libc::size_t;
 use std::os::raw::c_char;
 use std::sync::Arc;
 
-use mentat::query::QueryResults;
+use mentat::query::{
+    QueryResults,
+    Variable,
+};
 use mentat_core::Uuid;
 use time::Timespec;
 
@@ -39,7 +42,8 @@ use items::Item;
 use labels::Label;
 use store::{
     Store,
-    ToInner
+    ToInner,
+    ToTypedValue,
 };
 
 #[derive(Debug)]
@@ -88,10 +92,10 @@ impl ListManager {
             [?eid :label/name ?name]
             [?eid :label/color ?color]
         ]"#;
-        let result = self.store.query_args(query, &[&("?name", &name)])?;
+        let result = self.store.query_args(query, vec![(Variable::from_valid_name("?name"), name.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
-            if !rows.is_empty() {
-                Ok(Label::from_row(&rows[0]))
+            if let Some(row) = rows.first() {
+                Ok(Label::from_row(&row))
             } else {
                 Ok(None)
             }
@@ -101,7 +105,7 @@ impl ListManager {
     }
 
     pub fn fetch_labels(&self) -> Result<Vec<Label>, list_errors::Error> {
-        let query = r#"[:find ?eid, ?name, ?color
+        let query = r#"[:find [?eid, ?name, ?color]
             :where
             [?eid :label/name ?name]
             [?eid :label/color ?color]
@@ -110,6 +114,7 @@ impl ListManager {
         if let QueryResults::Rel(rows) = result {
             Ok(rows.iter().map(|row| Label::from_row(&row).unwrap()).collect())
         } else {
+            println!("result {:?}", result);
             Ok(vec![])
         }
     }
@@ -123,7 +128,7 @@ impl ListManager {
             [?i :item/label ?l]
             [?i :item/uuid ?item_uuid]
         ]"#;
-        let result = self.store.query_args(query, &[&("?item_uuid", &item_uuid)])?;
+        let result = self.store.query_args(query, vec![(Variable::from_valid_name("?item_uuid"), item_uuid.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
             Ok(rows.iter().filter_map(|row| Label::from_row(&row)).collect())
         } else {
@@ -169,7 +174,7 @@ impl ListManager {
             [?eid :item/label ?l]
             [?l :label/name ?label]
         ]"#;
-        let result = self.store.query_args(query, &[&("?label", &label.name)])?;
+        let result = self.store.query_args(query, vec![(Variable::from_valid_name("?label"), label.name.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
             Ok(rows.iter().filter_map(|row| {
                 let uuid: Uuid = row[0].to_owned().to_inner();
@@ -188,10 +193,9 @@ impl ListManager {
             [?eid :item/uuid ?uuid]
             [?eid :item/name ?name]
         ]"#;
-        let result = self.store.query_args(query, &[&("?uuid", &uuid)])?;
+        let result = self.store.query_args(query, vec![(Variable::from_valid_name("?uuid"), uuid.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
-            if !rows.is_empty() {
-                let row = &rows[0];
+            if let Some(row) = rows.first() {
                 Ok(Some(Item{
                     id: row[0].clone().to_inner(),
                     uuid: row[1].clone().to_inner(),
@@ -209,16 +213,15 @@ impl ListManager {
     }
 
     fn fetch_date_for_item(&self, attr: &str, item_id: &Uuid) -> Result<Option<Timespec>, list_errors::Error> {
-        let query = format!(r#"[:find ?{0}
-            :in ?uuid
+        let query = r#"[:find ?val
+            :in ?a ?uuid
             :where
-            [?eid :item/{0} ?{0}]
+            [?eid ?a ?val]
             [?eid :item/uuid ?uuid]
-        ]"#, attr);
-        let result = self.store.query_args(&query, &[&("?uuid", &item_id)])?;
+        ]"#;
+        let result = self.store.query_args(&query, vec![(Variable::from_valid_name("?a"), attr.to_typed_value()), (Variable::from_valid_name("?uuid"), item_id.to_typed_value())])?;
         if let QueryResults::Rel(rows) = result {
-            if !rows.is_empty() {
-                let row = &rows[0];
+            if let Some(row) = rows.first() {
                 let date: Option<Timespec> = row[0].clone().to_inner();
                 Ok(date)
             } else {
