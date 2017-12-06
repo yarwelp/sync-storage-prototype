@@ -227,7 +227,7 @@ impl Store {
         Ok(self.conn.q_once(&self.handle, query, None)?)
     }
 
-    pub fn query_args<T>(&self, query: &str, inputs: &[&(&String, &T)]) ->  Result<QueryResults, store_errors::Error>
+    pub fn query_args<T>(&self, query: &str, inputs: &[&(&str, &T)]) ->  Result<QueryResults, store_errors::Error>
         where T: ToTypedValue {
         let mut ee = vec![];
         for &&(ref arg, ref val) in inputs.iter() {
