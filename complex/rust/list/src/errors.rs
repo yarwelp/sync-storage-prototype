@@ -8,7 +8,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-#![allow(dead_code)]
+use mentat;
 
 use store::errors as store_error;
 
@@ -19,6 +19,7 @@ error_chain! {
 
     links {
         StoreError(store_error::Error, store_error::ErrorKind);
+        MentatError(mentat::errors::Error, mentat::errors::ErrorKind);
     }
 
     errors {

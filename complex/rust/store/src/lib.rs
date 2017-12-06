@@ -49,7 +49,6 @@ use mentat_db::types::TxReport;
 
 use mentat::query::{
     QueryInputs,
-    QueryResults,
     Variable,
 };
 
@@ -264,13 +263,13 @@ impl Store {
         Ok(())
     }
 
-    pub fn query(&self, query: &str) ->  Result<QueryResults, store_errors::Error> {
-        Ok(self.conn.q_once(&self.handle, query, None)?)
+    pub fn query(&self, query: &str) -> mentat::query::QueryExecutionResult {
+        self.conn.q_once(&self.handle, query, None)
     }
 
-    pub fn query_args(&self, query: &str, inputs: Vec<(Variable, TypedValue)>) ->  Result<QueryResults, store_errors::Error> {
+    pub fn query_args(&self, query: &str, inputs: Vec<(Variable, TypedValue)>) -> mentat::query::QueryExecutionResult {
         let i = QueryInputs::with_value_sequence(inputs);
-        Ok(self.conn.q_once(&self.handle, query, i)?)
+        self.conn.q_once(&self.handle, query, i)
     }
 
     pub fn transact(&mut self, transaction: &str) -> Result<TxReport, store_errors::Error> {
