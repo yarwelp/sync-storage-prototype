@@ -88,7 +88,7 @@ impl ListManager {
             [?eid :label/name ?name]
             [?eid :label/color ?color]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?name".to_string(), &name)])?;
+        let result = self.store.query_args(query, &[&(&"?name".to_string(), &name)])?;
         if let QueryResults::Rel(rows) = result {
             if !rows.is_empty() {
                 Ok(Label::from_row(&rows[0]))
@@ -106,7 +106,7 @@ impl ListManager {
             [?eid :label/name ?name]
             [?eid :label/color ?color]
         ]"#;
-        let result = Arc::clone(&self.store).query(query)?;
+        let result = self.store.query(query)?;
         if let QueryResults::Rel(rows) = result {
             Ok(rows.iter().map(|row| Label::from_row(&row).unwrap()).collect())
         } else {
@@ -123,7 +123,7 @@ impl ListManager {
             [?i :item/label ?l]
             [?i :item/uuid ?item_uuid]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?item_uuid".to_string(), &item_uuid)])?;
+        let result = self.store.query_args(query, &[&(&"?item_uuid".to_string(), &item_uuid)])?;
         if let QueryResults::Rel(rows) = result {
             Ok(rows.iter().filter_map(|row| Label::from_row(&row)).collect())
         } else {
@@ -169,7 +169,7 @@ impl ListManager {
             [?eid :item/label ?l]
             [?l :label/name ?label]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?label".to_string(), &label.name)])?;
+        let result = self.store.query_args(query, &[&(&"?label".to_string(), &label.name)])?;
         if let QueryResults::Rel(rows) = result {
             Ok(rows.iter().filter_map(|row| {
                 let uuid: Uuid = row[0].to_owned().to_inner();
@@ -188,7 +188,7 @@ impl ListManager {
             [?eid :item/uuid ?uuid]
             [?eid :item/name ?name]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?uuid".to_string(), &uuid)])?;
+        let result = self.store.query_args(query, &[&(&"?uuid".to_string(), &uuid)])?;
         if let QueryResults::Rel(rows) = result {
             if !rows.is_empty() {
                 let row = &rows[0];
@@ -215,7 +215,7 @@ impl ListManager {
             [?eid :item/{0} ?{0}]
             [?eid :item/uuid ?uuid]
         ]"#, attr);
-        let result = Arc::clone(&self.store).query_args(&query, &[&(&"?uuid".to_string(), &item_id)])?;
+        let result = self.store.query_args(&query, &[&(&"?uuid".to_string(), &item_id)])?;
         if let QueryResults::Rel(rows) = result {
             if !rows.is_empty() {
                 let row = &rows[0];
@@ -423,7 +423,7 @@ mod test {
     #[test]
     fn test_new_list_manager() {
         let manager = list_manager();
-        let schema = Arc::clone(&manager.store).fetch_schema();
+        let schema = manager.store.fetch_schema();
         assert_ident_present(schema.clone(), "label", "name");
         assert_ident_present(schema, "list", "name");
     }
