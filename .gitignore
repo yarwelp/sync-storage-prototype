@@ -28,8 +28,15 @@ xcuserdata
 
 ## Rust
 NDK/
-*/rust/target/*/release/.fingerprint/
-*/rust/target/*/release/deps/
-*/rust/target/
-*/rust/*/target/
+rust/target/*/release/.fingerprint/
+rust/target/*/release/deps/
+rust/target/
+rust/*/target/
 
+## Swap files and such.
+*.bak
+*.rs.bak
+*.rs.bk
+*~
+.*.sw*
+.s*
