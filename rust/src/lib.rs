@@ -378,6 +378,293 @@ impl Toodle {
     }
 }
 
+fn create_uuid() -> Uuid {
+    uuid::Uuid::new_v4()
+}
+
+fn return_date_field(results: QueryExecutionResult) -> Result<Option<Timespec>, list_errors::Error> {
+    results.into_scalar_result()
+            .map(|o| o.and_then(|ts| ts.to_inner()))
+            .map_err(|e| e.into())
+}
+
+impl Toodle {
+    fn item_row_to_item(&self, connection: &Connection, row: Vec<TypedValue>) -> Item {
+        let uuid = row[1].clone().to_inner();
+        Item {
+            id: row[0].clone().to_inner(),
+            uuid: uuid,
+            name: row[2].clone().to_inner(),
+            due_date: self.fetch_due_date_for_item(connection, &uuid).unwrap_or(None),
+            completion_date: self.fetch_completion_date_for_item(connection, &uuid).unwrap_or(None),
+            labels: self.fetch_labels_for_item(connection, &uuid).unwrap_or(vec![]),
+        }
+    }
+
+    pub fn transact_items_vocabulary(&mut self, connection: &mut Connection) -> Result<(), list_errors::Error> {
+        let schema = r#"[
+            {   :db/ident       :item/uuid
+                :db/valueType   :db.type/uuid
+                :db/cardinality :db.cardinality/one
+                :db/unique      :db.unique/value
+                :db/index true },
+            {   :db/ident       :item/name
+                :db/valueType   :db.type/string
+                :db/cardinality :db.cardinality/one
+                :db/index       true
+                :db/fulltext    true  },
+            {   :db/ident       :item/due_date
+                :db/valueType   :db.type/instant
+                :db/cardinality :db.cardinality/one  },
+            {   :db/ident       :item/completion_date
+                :db/valueType   :db.type/instant
+                :db/cardinality :db.cardinality/one  },
+            {  :db/ident     :item/label
+                :db/valueType :db.type/ref
+                :db/cardinality :db.cardinality/many }]"#;
+        self.store.store
+            .transact(connection, schema)
+            .map_err(|e| e.into())
+            .map(|_| ())
+    }
+
+    pub fn transact_labels_vocabulary(&mut self, connection: &mut Connection) -> Result<(), list_errors::Error> {
+        let schema = r#"[
+            {  :db/ident       :label/name
+               :db/valueType   :db.type/string
+               :db/cardinality :db.cardinality/one
+               :db/unique      :db.unique/identity
+               :db/index       true
+               :db/fulltext    true },
+            {  :db/ident       :label/color
+               :db/valueType   :db.type/string
+               :db/cardinality :db.cardinality/one }]"#;
+        self.store.store
+            .transact(connection, schema)
+            .map_err(|e| e.into())
+            .map(|_| ())
+    }
+
+    pub fn create_label(&mut self, connection: &mut Connection, name: String, color: String) -> Result<Option<Label>, list_errors::Error> {
+        // TODO: better transact API.
+        let query = format!("[{{ :label/name \"{0}\" :label/color \"{1}\" }}]", &name, &color);
+        self.store.store
+            .transact(connection, &query)?;
+        self.fetch_label(connection, &name)
+    }
+
+    pub fn fetch_label(&self, connection: &Connection, name: &String) -> Result<Option<Label>, list_errors::Error> {
+        let query = r#"[:find [?eid ?name ?color]
+                        :in ?name
+                        :where
+                        [?eid :label/name ?name]
+                        [?eid :label/color ?color]
+        ]"#;
+        self.store.store
+            .query_args(connection, query, vec![(Variable::from_valid_name("?name"), name.to_typed_value())])
+            .into_tuple_result()
+            .map(|o| o.as_ref().and_then(Label::from_row))
+            .map_err(|e| e.into())
+    }
+
+    pub fn fetch_labels(&self, connection: &Connection) -> Result<Vec<Label>, list_errors::Error> {
+        let query = r#"[:find ?eid ?name ?color
+                        :where
+                        [?eid :label/name ?name]
+                        [?eid :label/color ?color]
+        ]"#;
+        self.store.store
+            .query(connection, query)
+            .into_rel_result()
+            .map(|rows| rows.iter().filter_map(|row| Label::from_row(&row)).collect())
+            .map_err(|e| e.into())
+    }
+
+    pub fn fetch_labels_for_item(&self, connection: &Connection, item_uuid: &Uuid) -> Result<Vec<Label>, list_errors::Error> {
+        let query = r#"[:find ?l ?name ?color
+                        :in ?item_uuid
+                        :where
+                        [?i :item/uuid ?item_uuid]
+                        [?i :item/label ?l]
+                        [?l :label/name ?name]
+                        [?l :label/color ?color]
+        ]"#;
+        self.store.store
+            .query_args(connection, query, vec![(Variable::from_valid_name("?item_uuid"), item_uuid.to_typed_value())])
+            .into_rel_result()
+            .map(|rows| rows.iter().filter_map(|row| Label::from_row(&row)).collect())
+            .map_err(|e| e.into())
+    }
+
+
+    pub fn fetch_items_with_label(&self, connection: &Connection, label: &Label) -> Result<Vec<Item>, list_errors::Error> {
+        let query = r#"[:find ?eid ?uuid ?name
+                        :in ?label
+                        :where
+                        [?l :label/name ?label]
+                        [?eid :item/label ?l]
+                        [?eid :item/uuid ?uuid]
+                        [?eid :item/name ?name]
+        ]"#;
+        self.store.store
+            .query_args(connection, query, vec![(Variable::from_valid_name("?label"), label.name.to_typed_value())])
+            .into_rel_result()
+            .map(|rows| rows.into_iter().map(|r| self.item_row_to_item(connection, r)).collect())
+            .map_err(|e| e.into())
+    }
+
+    pub fn fetch_items(&self, connection: &Connection) -> Result<Items, list_errors::Error> {
+        let query = r#"[:find ?eid ?uuid ?name
+                        :where
+                        [?eid :item/uuid ?uuid]
+                        [?eid :item/name ?name]
+        ]"#;
+        
+        self.store.store
+            .query(connection, query)
+            .into_rel_result()
+            .map(|rows| Items::new(rows.into_iter().map(|r| self.item_row_to_item(connection, r)).collect()))
+            .map_err(|e| e.into())
+    }
+
+    pub fn fetch_item(&self, connection: &Connection, uuid: &Uuid) -> Result<Option<Item> , list_errors::Error>{
+        let query = r#"[:find [?eid ?uuid ?name]
+                        :in ?uuid
+                        :where
+                        [?eid :item/uuid ?uuid]
+                        [?eid :item/name ?name]
+        ]"#;
+        self.store.store
+            .query_args(connection, query, vec![(Variable::from_valid_name("?uuid"), uuid.to_typed_value())])
+            .into_tuple_result()
+            .map(|o| o.map(|r| self.item_row_to_item(connection, r)))
+            .map_err(|e| e.into())
+    }
+
+    fn fetch_completion_date_for_item(&self, connection: &Connection, item_id: &Uuid) -> Result<Option<Timespec>, list_errors::Error> {
+        let query = r#"[:find ?date .
+            :in ?uuid
+            :where
+            [?eid :item/uuid ?uuid]
+            [?eid :item/completion_date ?date]
+        ]"#;
+
+        return_date_field(
+            self.store.store
+                .query_args(connection, &query, vec![(Variable::from_valid_name("?uuid"), item_id.to_typed_value())]))
+    }
+
+    fn fetch_due_date_for_item(&self, connection: &Connection, item_id: &Uuid) -> Result<Option<Timespec>, list_errors::Error> {
+        let query = r#"[:find ?date .
+            :in ?uuid
+            :where
+            [?eid :item/uuid ?uuid]
+            [?eid :item/due_date ?date]
+        ]"#;
+
+        let date = return_date_field(
+            self.store.store
+                .query_args(connection, &query, vec![(Variable::from_valid_name("?uuid"), item_id.to_typed_value())]));
+        date
+    }
+
+    pub fn create_item(&mut self, connection: &mut Connection, item: &Item) -> Result<Uuid, list_errors::Error> {
+        // TODO: make this mapping better!
+        let label_str = item.labels
+                            .iter()
+                            .filter(|label| label.id.is_some() )
+                            .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                            .collect::<Vec<String>>()
+                            .join(", ");
+        let item_uuid = create_uuid();
+        let uuid_string = item_uuid.hyphenated().to_string();
+        let mut query = format!(r#"[{{
+            :item/uuid #uuid {:?}
+            :item/name {:?}
+            "#, &uuid_string, &(item.name));
+        if let Some(due_date) = item.due_date {
+            let micro_seconds = due_date.sec * 1000000;
+            query = format!(r#"{}:item/due_date #instmicros {}
+                "#, &query, &micro_seconds);
+        }
+        if let Some(completion_date) = item.completion_date {
+            let micro_seconds = completion_date.sec * 1000000;
+            query = format!(r#"{}:item/completion_date #instmicros {}
+                "#, &query, &micro_seconds);
+        }
+        if !label_str.is_empty() {
+            query = format!(r#"{0}:item/label [{1}]
+                "#, &query, &label_str);
+        }
+        query = format!("{0}}}]", &query);
+        let _ = self.store.store.transact(connection, &query)?;
+        Ok(item_uuid)
+    }
+
+    pub fn create_and_fetch_item(&mut self, connection: &mut Connection, item: &Item) -> Result<Option<Item>, list_errors::Error> {
+        let item_uuid = self.create_item(connection, &item)?;
+        self.fetch_item(connection, &item_uuid)
+    }
+
+    pub fn update_item(&mut self, connection: &mut Connection, item: &Item, name: Option<String>, due_date: Option<Timespec>, completion_date: Option<Timespec>, labels: Option<&Vec<Label>>) -> Result<(), list_errors::Error> {
+        let item_id = item.id.to_owned().expect("item must have ID to be updated");
+        let mut transaction = vec![];
+
+        if let Some(name) = name {
+            if item.name != name {
+                transaction.push(format!("[:db/add {0} :item/name \"{1}\"]", &item_id.id, name));
+            }
+        }
+        if item.due_date != due_date {
+            if let Some(date) = due_date {
+                let micro_seconds = date.sec * 1000000;
+                transaction.push(format!("[:db/add {:?} :item/due_date #instmicros {}]", &item_id.id, &micro_seconds));
+            } else {
+                let micro_seconds = item.due_date.unwrap().sec * 1000000;
+                transaction.push(format!("[:db/retract {:?} :item/due_date #instmicros {}]", &item_id.id, &micro_seconds));
+            }
+        }
+
+        if item.completion_date != completion_date {
+            if let Some(date) = completion_date {
+                let micro_seconds = date.sec * 1000000;
+                transaction.push(format!("[:db/add {:?} :item/completion_date #instmicros {}]", &item_id.id, &micro_seconds));
+            } else {
+                let micro_seconds = item.completion_date.unwrap().sec * 1000000;
+                transaction.push(format!("[:db/retract {:?} :item/completion_date #instmicros {}]", &item_id.id, &micro_seconds));
+            }
+        }
+
+        if let Some(new_labels) = labels {
+            let existing_labels = self.fetch_labels_for_item(connection, &(item.uuid)).unwrap_or(vec![]);
+
+            let labels_to_add = new_labels.iter()
+                                        .filter(|label| !existing_labels.contains(label) && label.id.is_some() )
+                                        .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                                        .collect::<Vec<String>>()
+                                        .join(", ");
+            if !labels_to_add.is_empty() {
+                transaction.push(format!("[:db/add {0} :item/label [{1}]]", &item_id.id, labels_to_add));
+            }
+            let labels_to_remove = existing_labels.iter()
+                                        .filter(|label| !new_labels.contains(label) && label.id.is_some() )
+                                        .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                                        .collect::<Vec<String>>()
+                                        .join(", ");
+            if !labels_to_remove.is_empty() {
+                transaction.push(format!("[:db/retract {0} :item/label [{1}]]", &item_id.id, labels_to_remove));
+            }
+        }
+
+        // TODO: better transact API.
+        let query = format!("[{0}]", transaction.join(""));
+        self.store.store
+            .transact(connection, &query)
+            .map(|_| ())
+            .map_err(|e| e.into())
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
     let uri = c_char_to_string(uri);
