@@ -45,6 +45,18 @@ pub struct Item {
     pub labels: Vec<Label>,
 }
 
+pub struct Items {
+    pub vec: Vec<Item>
+}
+
+impl Items {
+    pub fn new(vec: Vec<Item>) -> Items {
+        Items {
+            vec: vec
+        }
+    }
+}
+
 impl Drop for Item {
     fn drop(&mut self) {
         println!("{:?} is being deallocated", self);
