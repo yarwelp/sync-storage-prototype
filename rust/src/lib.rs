@@ -23,10 +23,6 @@ extern crate ffi_utils;
 
 use libc::{ c_int, size_t, time_t };
 use std::os::raw::c_char;
-use std::sync::{
-    Arc,
-    RwLock,
-};
 use std::ffi::CString;
 use mentat::query::{
     IntoResult,
@@ -36,9 +32,6 @@ use mentat::query::{
 use mentat_core::{
     TypedValue,
     Uuid,
-};
-use rusqlite::{
-    Connection
 };
 use time::Timespec;
 
@@ -79,13 +72,13 @@ pub struct Toodle {
 
 impl Toodle {
     fn new(uri: String) -> Result<Toodle, errors::Error> {
-        let mut store_result = Store::new_store(uri)?;
+        let store_result = Store::new_store(uri)?;
         let mut toodle = Toodle {
             connection: store_result,
         };
 
-        toodle.transact_labels_vocabulary();
-        toodle.transact_items_vocabulary();
+        toodle.transact_labels_vocabulary()?;
+        toodle.transact_items_vocabulary()?;
 
         Ok(toodle)
     }
@@ -381,7 +374,7 @@ impl Toodle {
 #[no_mangle]
 pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
     let uri = c_char_to_string(uri);
-    let mut toodle = Toodle::new(uri).expect("expected a toodle");
+    let toodle = Toodle::new(uri).expect("expected a toodle");
     Box::into_raw(Box::new(toodle))
 }
 
@@ -418,7 +411,6 @@ pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c
     if let Some(callback) = CHANGED_CALLBACK {
         callback();
     }
-    let return_item: Option<ItemC>;
     if let Some(i) = item {
         return Box::into_raw(Box::new(i.into()));
     }

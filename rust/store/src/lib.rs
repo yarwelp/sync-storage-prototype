@@ -21,9 +21,6 @@ extern crate time;
 extern crate ffi_utils;
 
 use std::fmt;
-use std::os::raw::{
-    c_char
-};
 use std::rc::Rc;
 use std::sync::{
     Arc,
@@ -66,7 +63,6 @@ use time::Timespec;
 
 pub mod errors;
 
-use ffi_utils::strings::c_char_to_string;
 use errors as store_errors;
 
 pub trait ToTypedValue {

@@ -19,10 +19,7 @@ pub use edn::{
     DateTime,
     Utc,
 };
-use mentat_core::{
-    TypedValue,
-    Uuid,
-};
+use mentat_core::Uuid;
 use time::Timespec;
 
 use ffi_utils::strings::{
@@ -30,10 +27,7 @@ use ffi_utils::strings::{
     c_char_to_string,
 };
 use labels::Label;
-use store::{
-    Entity,
-    ToInner
-};
+use store::Entity;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Item {

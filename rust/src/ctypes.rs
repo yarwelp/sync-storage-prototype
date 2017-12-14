@@ -12,6 +12,7 @@ use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
 };
+use libc::time_t;
 use std::os::raw::c_char;
 use std::ptr;
 
@@ -27,8 +28,8 @@ use items::{
 pub struct ItemC {
     pub uuid: *mut c_char,
     pub name: *mut c_char,
-    pub due_date: *mut i64,
-    pub completion_date: *mut i64,
+    pub due_date: *mut time_t,
+    pub completion_date: *mut time_t,
 }
 
 impl From<Item> for ItemC {
