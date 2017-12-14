@@ -4,58 +4,88 @@
 
 import Foundation
 
-class Item: RustObject {
-    let raw: OpaquePointer
+class Item {
+    var raw: UnsafePointer<CItem>
 
-    required init(raw: OpaquePointer) {
+    required init(raw: UnsafePointer<CItem>) {
         self.raw = raw
     }
 
-    init() {
-        self.raw = item_new()
+    func intoRaw() -> UnsafePointer<CItem> {
+        return self.raw
     }
 
     deinit {
         item_destroy(raw)
     }
 
-    var id: Int? {
-        return item_get_id(raw)?.pointee
+    var uuid: String? {
+        if let uuid = raw.pointee.uuid {
+            return String(cString: uuid)
+        }
+        return nil
     }
 
-    var description: String {
+    var name: String {
         get {
-            return String(cString: item_get_description(raw))
+            return String(cString: raw.pointee.name)
         }
         set {
-            item_set_description(raw, newValue)
+            item_set_name(UnsafeMutablePointer<CItem>(mutating: raw), newValue)
         }
-    }
-
-    var createdAt: Date {
-        return Date(timeIntervalSinceReferenceDate: Double(item_get_created_at(raw)))
     }
 
     var dueDate: Date? {
         get {
-            guard let date = item_get_due_date(raw) else {
+            guard let date = raw.pointee.dueDate else {
                 return nil
             }
             return Date(timeIntervalSince1970: Double(date.pointee))
         }
         set {
             if let d = newValue {
-                item_set_due_date(raw, Int64(d.timeIntervalSince1970))
+                let timestamp = d.timeIntervalSince1970
+                var date = Int64(timestamp)
+                item_set_due_date(UnsafeMutablePointer<CItem>(mutating: raw), AutoreleasingUnsafeMutablePointer<Int64>(&date))
             }
         }
     }
 
-    var isComplete: Bool {
+    var completionDate: Date? {
         get {
-            return item_get_is_complete(raw) != 0
+            guard let date = raw.pointee.completionDate else {
+                return nil
+            }
+            return Date(timeIntervalSince1970: Double(date.pointee))
         }
         set {
-            item_set_is_complete(raw, newValue ? 1 : 0)
+            if let d = newValue {
+                let timestamp = d.timeIntervalSince1970
+                var date = Int64(timestamp)
+                item_set_completion_date(UnsafeMutablePointer<CItem>(mutating: raw), AutoreleasingUnsafeMutablePointer<Int64>(&date))
+            }
+        }
+    }
+
+    fileprivate var _labels: [Label]?
+
+    var labels: [Label] {
+        get {
+            if _labels == nil {
+                _labels = []
+                // TODO: When we get labels in, put this back!
+//                let ls = item_get_labels(self.raw)
+//                _labels = []
+//                for index in 0..<item_labels_count(ls) {
+//                    let label = Label(raw: item_label_at(ls, index)!)
+//                    _labels?.append(label)
+//                }
+            }
+
+            return _labels!
+        }
+        set {
+            _labels = nil
         }
     }
 
