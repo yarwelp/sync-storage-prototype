@@ -41,7 +41,7 @@ class ToodleLib: RustObject {
     }
 
     func allItems() -> [Item] {
-        let items = list_manager_get_all_items(self.raw)
+        let items = toodle_get_all_items(self.raw)
         var allItems: [Item] = []
         for index in 0..<item_list_count(items) {
             let item = Item(raw: item_list_entry_at(items, Int(index))!)
@@ -61,7 +61,7 @@ class ToodleLib: RustObject {
     //    }
 
     func createLabel(withName name: String, color: UIColor) -> Label {
-        return Label(raw: list_manager_create_label(self.raw, name, color.toHex()!))
+        return Label(raw: toodle_create_label(self.raw, name, color.toHex()!))
     }
 
     func createItem(withName name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) -> Item? {
@@ -71,7 +71,7 @@ class ToodleLib: RustObject {
             dd = UnsafeMutablePointer<Int64>(&d)
         }
         var pointerArray = self.toPointerArray(list: labels as [RustObject])
-        return Item(raw: list_manager_create_item(self.raw,
+        return Item(raw: toodle_create_item(self.raw,
                                                   name,
                                                   dd,
                                                   UnsafeMutablePointer<OpaquePointer>(&pointerArray))!)
@@ -89,7 +89,7 @@ class ToodleLib: RustObject {
             cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
         }
         var pointerArray = self.toPointerArray(list: labels as [RustObject])
-        list_manager_update_item(raw,
+        toodle_update_item(raw,
                                  item.raw,
                                  name,
                                  dd,
