@@ -1,4 +1,3 @@
-<<<<<<< 2c50ca2ad6901eaadfe1ddec503c155dda2bd8a1
 // Copyright 2016 Mozilla
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
