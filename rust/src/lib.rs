@@ -398,7 +398,7 @@ pub unsafe extern "C" fn toodle_get_all_labels(manager: *const Toodle) -> *mut V
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c_char, due_date: *const i64) -> *mut ItemC {
+pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c_char, due_date: *const time_t) -> *mut ItemC {
     let name = c_char_to_string(name);
     log::d(&format!("Creating item: {:?}, {:?}, {:?}", name, due_date, manager)[..]);
 
