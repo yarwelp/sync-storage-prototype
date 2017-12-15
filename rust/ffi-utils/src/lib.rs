@@ -33,24 +33,27 @@ pub mod strings {
 pub mod android_ffi;
 
 pub mod log {
+    #[cfg(all(target_os="android", not(test)))]
     use std::ffi::CString;
 
+    #[cfg(all(target_os="android", not(test)))]
     use android_ffi;
 
-    // #[cfg(test)]
-    pub fn d(message: &str) {}
+    // TODO far from ideal. And, we might actually want to println in tests.
+    #[cfg(all(not(target_os="android"), not(target_os="ios")))]
+    pub fn d(_: &str) {}
 
-    // #[cfg(target_os="ios")]
-    // pub fn d(message: &str) {
-    //     println!(message);
-    // }
+    #[cfg(all(target_os="ios", not(test)))]
+    pub fn d(message: &str) {
+        println!(message);
+    }
 
-    // #[cfg(target_os="android")]
-    // pub fn d(message: &str) {
-    //     let message = CString::new(message).unwrap();
-    //     let message = message.as_ptr();
-    //     let tag = CString::new("RustyToodle").unwrap();
-    //     let tag = tag.as_ptr();
-    //     unsafe { android_ffi::__android_log_write(android_ffi::ANDROID_LOG_DEBUG, tag, message) };
-    // }
+    #[cfg(all(target_os="android", not(test)))]
+    pub fn d(message: &str) {
+        let message = CString::new(message).unwrap();
+        let message = message.as_ptr();
+        let tag = CString::new("RustyToodle").unwrap();
+        let tag = tag.as_ptr();
+        unsafe { android_ffi::__android_log_write(android_ffi::ANDROID_LOG_DEBUG, tag, message) };
+    }
 }
