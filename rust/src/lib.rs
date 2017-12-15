@@ -685,7 +685,7 @@ pub unsafe extern "C" fn toodle_get_all_labels(manager: *const Toodle) -> *mut V
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c_char, due_date: *const time_t) -> *mut ItemC {
+pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c_char, due_date: *const i64) -> *mut ItemC {
     let name = c_char_to_string(name);
     log::d(&format!("Creating item: {:?}, {:?}, {:?}", name, due_date, manager)[..]);
 
@@ -695,7 +695,7 @@ pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c
     item.name = name;
     let due: Option<Timespec>;
     if !due_date.is_null() {
-        let due_date = *due_date as i64;
+        let due_date = due_date as i64;
         due = Some(Timespec::new(due_date, 0));
     } else {
         due = None;
@@ -777,6 +777,7 @@ pub unsafe extern "C" fn item_c_destroy(item: *mut ItemC) -> *mut ItemC {
     let item = Box::from_raw(item);
 
     // Reclaim our strings and let Rust clear up their memory.
+    let _ = CString::from_raw(item.uuid);
     let _ = CString::from_raw(item.name);
 
     // Prevent Rust from clearing out item itself. It's already managed by toodle_all_items.

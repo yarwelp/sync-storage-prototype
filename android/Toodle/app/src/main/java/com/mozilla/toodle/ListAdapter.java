@@ -21,6 +21,7 @@ import com.mozilla.toodle.rust.Toodle;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
                 toodle.getAllItems(new NativeItemsCallback() {
                     @Override
                     public void items(@Nullable NativeItemSet.ByReference itemSet) {
+                        Log.i("RustyToodleJava", "Got the itemSet");
                         if (itemSet == null) {
                             Log.i("RustyToodleJava", "Got no items!");
                             listAdapter.dataset = new ArrayList<>(0);
@@ -97,6 +99,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(dataset.get(position).name());
+        ((TextView) holder.itemView.findViewById(R.id.itemDueDate)).setText("Due: " + SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM).format(dataset.get(position).dueDate()));
     }
 
     @Override

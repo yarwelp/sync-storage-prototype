@@ -15,9 +15,10 @@ import java.util.Date;
 import java.util.List;
 
 public class Item {
-//    private String uuid;
+    private String uuid;
     private String name;
     private Long dueDate;
+    private Long completionDate;
 
     public String name() {
         return name;
@@ -35,14 +36,16 @@ public class Item {
     Item dueDate(final int year, final int month, final int date) {
         // TODO pretty sure this is wrong, somehow.
         final Date dd = new Date(year, month, date);
-        dueDate = dd.getTime();
+        dueDate = System.currentTimeMillis();
         return this;
     }
 
     private static Item fromNativeItem(NativeItem nativeItem) {
         final Item item = new Item();
+        item.uuid = nativeItem.uuid;
         item.name = nativeItem.itemName;
-//        item.uuid = nativeItem.uuid;
+        item.dueDate = nativeItem.dueDate.longValue();
+        item.completionDate = nativeItem.completionDate.longValue();
         return item;
     }
 
