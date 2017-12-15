@@ -408,7 +408,7 @@ pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c
     item.name = name;
     let due: Option<Timespec>;
     if !due_date.is_null() {
-        let due_date = due_date as i64;
+        let due_date = *due_date as i64;
         due = Some(Timespec::new(due_date, 0));
     } else {
         due = None;
