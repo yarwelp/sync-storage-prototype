@@ -34,9 +34,7 @@ public class Item {
     }
 
     Item dueDate(final int year, final int month, final int date) {
-        // TODO pretty sure this is wrong, somehow.
-        final Date dd = new Date(year, month, date);
-        dueDate = System.currentTimeMillis();
+        dueDate = new Date(year, month, date).getTime();
         return this;
     }
 
