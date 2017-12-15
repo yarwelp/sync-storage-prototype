@@ -1,5 +1,7 @@
 package com.mozilla.toodle.rust;
 
+import android.util.Log;
+
 import com.sun.jna.Structure;
 
 import java.io.Closeable;
@@ -16,6 +18,7 @@ public class NativeItemSet extends Structure implements Closeable {
 
     public NativeItem.ByReference items;
     public int numberOfItems;
+    public int len;
 
     public List<NativeItem> getItems() {
         final NativeItem[] array = (NativeItem[]) items.toArray(numberOfItems);
@@ -24,11 +27,12 @@ public class NativeItemSet extends Structure implements Closeable {
 
     @Override
     protected List<String> getFieldOrder() {
-        return Arrays.asList("items", "numberOfItems");
+        return Arrays.asList("items", "numberOfItems", "len");
     }
 
     @Override
     public void close() {
+        Log.i("NativeItemSet", "close");
         final NativeItem[] nativeItems = (NativeItem[]) items.toArray(numberOfItems);
         for (NativeItem nativeItem : nativeItems) {
             nativeItem.close();

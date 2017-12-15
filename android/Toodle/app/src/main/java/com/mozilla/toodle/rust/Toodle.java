@@ -6,8 +6,10 @@
 package com.mozilla.toodle.rust;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.mozilla.toodle.Item;
+import com.sun.jna.NativeLong;
 
 public class Toodle extends RustObject {
     static {
@@ -35,11 +37,12 @@ public class Toodle extends RustObject {
     }
 
     public void getAllItems(NativeItemsCallback callback) {
-        JNA.INSTANCE.toodle_get_all_items(rawPointer, callback);
+        JNA.INSTANCE.toodle_all_items(rawPointer, callback);
     }
 
     @Override
     public void close() {
+        Log.i("Toodle", "close");
         JNA.INSTANCE.toodle_destroy(rawPointer);
     }
 }

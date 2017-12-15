@@ -8,6 +8,7 @@ package com.mozilla.toodle.rust;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
+import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 
 public interface JNA extends Library {
@@ -19,8 +20,8 @@ public interface JNA extends Library {
     Pointer new_toodle(String dbPath);
     void toodle_destroy(Pointer toodle);
 
-    void toodle_create_item(Pointer listManager, String name, long dueDate);
+    void toodle_create_item(Pointer listManager, String name, Long dueDate);
     void toodle_on_items_changed(NativeItemsChangedCallback callback);
-    void toodle_get_all_items(Pointer listManager, NativeItemsCallback callback);
+    void toodle_all_items(Pointer listManager, NativeItemsCallback callback);
     void item_c_destroy(Pointer item);
 }

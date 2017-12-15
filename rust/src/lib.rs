@@ -490,6 +490,7 @@ pub unsafe extern "C" fn item_c_destroy(item: *mut ItemC) -> *mut ItemC {
     let item = Box::from_raw(item);
 
     // Reclaim our strings and let Rust clear up their memory.
+    let _ = CString::from_raw(item.uuid);
     let _ = CString::from_raw(item.name);
 
     // Prevent Rust from clearing out item itself. It's already managed by toodle_all_items.
