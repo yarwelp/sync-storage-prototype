@@ -80,7 +80,6 @@ class ItemViewController: UIViewController {
     init(item: Item) {
         self.item = item
         super.init(nibName: nil, bundle: nil)
-
         self.descriptionField.text = item.name
         if let dueDate = item.dueDate {
             self.dueDateButton.setTitle(self.dateAsString(date: dueDate), for: .normal)

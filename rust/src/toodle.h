@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include "labels.h"
 
-struct toodle;
+struct Toodle;
 
-struct toodle* new_toodle(const char* uri);
-void toodle_destroy(struct toodle* toodle);
+struct Toodle* new_toodle(const char* uri);
+
+void toodle_destroy(struct Toodle* toodle);

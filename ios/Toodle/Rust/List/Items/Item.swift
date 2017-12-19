@@ -5,13 +5,13 @@
 import Foundation
 
 class Item {
-    var raw: UnsafePointer<CItem>
+    var raw: UnsafePointer<ItemC>
 
-    required init(raw: UnsafePointer<CItem>) {
+    required init(raw: UnsafePointer<ItemC>) {
         self.raw = raw
     }
 
-    func intoRaw() -> UnsafePointer<CItem> {
+    func intoRaw() -> UnsafePointer<ItemC> {
         return self.raw
     }
 
@@ -19,21 +19,22 @@ class Item {
         item_destroy(raw)
     }
 
-    var uuid: String? {
-        if let uuid = raw.pointee.uuid {
-            return String(cString: uuid)
-        }
-        return nil
-    }
+//    var uuid: String? {
+//        
+////        if let uuid = raw.pointee.uuid {
+////            return String(cString: uuid)
+////        }
+////        return nil
+//    }
 
-    var name: String {
-        get {
-            return String(cString: raw.pointee.name)
-        }
-        set {
-            item_set_name(UnsafeMutablePointer<CItem>(mutating: raw), newValue)
-        }
-    }
+//    var name: String {
+//        get {
+//            return String(cString: raw.pointee.name)
+//        }
+//        set {
+//            item_set_name(UnsafeMutablePointer<ItemC>(mutating: raw), newValue)
+//        }
+//    }
 
     var dueDate: Date? {
         get {
