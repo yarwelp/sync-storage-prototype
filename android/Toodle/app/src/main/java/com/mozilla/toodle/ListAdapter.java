@@ -101,7 +101,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         final Item item = dataset.get(position);
         ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(item.name());
-        Long dueDate = item.dueDate();
+        final Long dueDate = item.dueDate();
         if (dueDate != null) {
             ((TextView) holder.itemView.findViewById(R.id.itemDueDate)).setText(
                     context.getResources().getString(
@@ -110,7 +110,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
                     )
             );
         }
-        Long completionDate = item.completionDate();
+        final Long completionDate = item.completionDate();
         ((CheckBox) holder.itemView.findViewById(R.id.itemDone)).setChecked(completionDate != null);
     }
 

@@ -48,13 +48,17 @@ public class Item {
         final Item item = new Item();
         item.uuid = nativeItem.uuid;
         item.name = nativeItem.itemName;
-        item.dueDate = nativeItem.dueDate.getValue().longValue();
-        if (item.dueDate == 0) {
-            item.dueDate = null;
+        if (nativeItem.dueDate != null) {
+            item.dueDate = nativeItem.dueDate.getValue().longValue();
+            if (item.dueDate == 0) {
+                item.dueDate = null;
+            }
         }
-        item.completionDate = nativeItem.dueDate.getValue().longValue();
-        if (item.completionDate == 0) {
-            item.completionDate = null;
+        if (nativeItem.completionDate != null) {
+            item.completionDate = nativeItem.completionDate.getValue().longValue();
+            if (item.completionDate == 0) {
+                item.completionDate = null;
+            }
         }
         return item;
     }
