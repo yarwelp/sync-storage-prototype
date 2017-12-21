@@ -117,7 +117,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "edn"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -340,7 +340,7 @@ dependencies = [
 [[package]]
 name = "mentat"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
@@ -366,7 +366,7 @@ dependencies = [
 [[package]]
 name = "mentat_core"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
  "enum-set 0.0.6 (git+https://github.com/rnewman/enum-set)",
@@ -379,7 +379,7 @@ dependencies = [
 [[package]]
 name = "mentat_db"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
  "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
@@ -397,7 +397,7 @@ dependencies = [
 [[package]]
 name = "mentat_parser_utils"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
@@ -407,7 +407,7 @@ dependencies = [
 [[package]]
 name = "mentat_query"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
  "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git)",
@@ -416,7 +416,7 @@ dependencies = [
 [[package]]
 name = "mentat_query_algebrizer"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
  "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git)",
@@ -426,7 +426,7 @@ dependencies = [
 [[package]]
 name = "mentat_query_parser"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
@@ -441,7 +441,7 @@ dependencies = [
 [[package]]
 name = "mentat_query_projector"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
  "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git)",
@@ -456,7 +456,7 @@ dependencies = [
 [[package]]
 name = "mentat_query_sql"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git)",
  "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git)",
@@ -468,7 +468,7 @@ dependencies = [
 [[package]]
 name = "mentat_query_translator"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
  "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git)",
@@ -482,7 +482,7 @@ dependencies = [
 [[package]]
 name = "mentat_sql"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
  "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git)",
@@ -493,7 +493,7 @@ dependencies = [
 [[package]]
 name = "mentat_tolstoy"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
  "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
@@ -512,7 +512,7 @@ dependencies = [
 [[package]]
 name = "mentat_tx"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
 ]
@@ -520,7 +520,7 @@ dependencies = [
 [[package]]
 name = "mentat_tx_parser"
 version = "0.0.1"
-source = "git+https://github.com/mozilla/mentat.git#c61bc79b99f4cb7d63a491c3b7c842848ed7cf90"
+source = "git+https://github.com/mozilla/mentat.git#158910484191dee013b299d130f48078f376119b"
 dependencies = [
  "combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "edn 0.1.0 (git+https://github.com/mozilla/mentat.git)",
