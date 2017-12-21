@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.mozilla.toodle.Item;
 import com.sun.jna.NativeLong;
+import com.sun.jna.ptr.NativeLongByReference;
 
 public class Toodle extends RustObject {
     static {

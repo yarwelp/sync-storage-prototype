@@ -6,6 +6,7 @@
 package com.mozilla.toodle;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.mozilla.toodle.rust.NativeItem;
 import com.mozilla.toodle.rust.Toodle;
@@ -33,6 +34,10 @@ public class Item {
         return dueDate;
     }
 
+    public Long completionDate() {
+        return completionDate;
+    }
+
     Item dueDate(final int year, final int month, final int date) {
         dueDate = new Date(year, month, date).getTime();
         return this;
@@ -42,8 +47,14 @@ public class Item {
         final Item item = new Item();
         item.uuid = nativeItem.uuid;
         item.name = nativeItem.itemName;
-        item.dueDate = nativeItem.dueDate.longValue();
-        item.completionDate = nativeItem.completionDate.longValue();
+        item.dueDate = nativeItem.dueDate.getValue().longValue();
+        if (item.dueDate == 0) {
+            item.dueDate = null;
+        }
+        item.completionDate = nativeItem.dueDate.getValue().longValue();
+        if (item.completionDate == 0) {
+            item.completionDate = null;
+        }
         return item;
     }
 

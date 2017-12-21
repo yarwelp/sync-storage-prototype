@@ -2,8 +2,11 @@ package com.mozilla.toodle.rust;
 
 import android.util.Log;
 
+import com.sun.jna.IntegerType;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
+import com.sun.jna.ptr.LongByReference;
+import com.sun.jna.ptr.NativeLongByReference;
 
 import java.io.Closeable;
 import java.util.Arrays;
@@ -18,8 +21,8 @@ public class NativeItem extends Structure implements Closeable {
 
     public String uuid;
     public String itemName;
-    public NativeLong dueDate;
-    public NativeLong completionDate;
+    public NativeLongByReference dueDate;
+    public NativeLongByReference completionDate;
 
     @Override
     protected List<String> getFieldOrder() {

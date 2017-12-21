@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -98,8 +99,19 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(dataset.get(position).name());
-        ((TextView) holder.itemView.findViewById(R.id.itemDueDate)).setText("Due: " + SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM).format(dataset.get(position).dueDate()));
+        final Item item = dataset.get(position);
+        ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(item.name());
+        Long dueDate = item.dueDate();
+        if (dueDate != null) {
+            ((TextView) holder.itemView.findViewById(R.id.itemDueDate)).setText(
+                    context.getResources().getString(
+                            R.string.due_date,
+                            SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM).format(dueDate * 1000)
+                    )
+            );
+        }
+        Long completionDate = item.completionDate();
+        ((CheckBox) holder.itemView.findViewById(R.id.itemDone)).setChecked(completionDate != null);
     }
 
     @Override
