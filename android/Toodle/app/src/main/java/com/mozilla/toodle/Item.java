@@ -6,13 +6,12 @@
 package com.mozilla.toodle;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.mozilla.toodle.rust.NativeItem;
 import com.mozilla.toodle.rust.Toodle;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
 
 public class Item {
@@ -39,7 +38,9 @@ public class Item {
     }
 
     Item dueDate(final int year, final int month, final int date) {
-        dueDate = new Date(year, month, date).getTime();
+        final Calendar cal = Calendar.getInstance();
+        cal.set(year, month, date);
+        dueDate = cal.getTimeInMillis() / 1000;
         return this;
     }
 

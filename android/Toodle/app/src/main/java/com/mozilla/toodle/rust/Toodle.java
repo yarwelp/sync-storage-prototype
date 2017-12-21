@@ -29,7 +29,7 @@ public class Toodle extends RustObject {
         JNA.INSTANCE.toodle_create_item(
                 rawPointer,
                 item.name(),
-                item.dueDate()
+                new NativeLongByReference(new NativeLong(item.dueDate()))
         );
     }
 
