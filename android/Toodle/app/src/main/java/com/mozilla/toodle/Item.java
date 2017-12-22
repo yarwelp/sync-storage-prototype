@@ -11,7 +11,7 @@ import com.mozilla.toodle.rust.NativeItem;
 import com.mozilla.toodle.rust.Toodle;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
 
 public class Item {
@@ -29,12 +29,31 @@ public class Item {
         return this;
     }
 
+    public String uuid() {
+        return uuid;
+    }
+
     public Long dueDate() {
         return dueDate;
     }
 
+    public Long completionDate() {
+        return completionDate;
+    }
+
+    Item completionDate(Long timestamp) {
+        if (timestamp == null) {
+            completionDate = null;
+        } else {
+            completionDate = timestamp / 1000;
+        }
+        return this;
+    }
+
     Item dueDate(final int year, final int month, final int date) {
-        dueDate = new Date(year, month, date).getTime();
+        final Calendar cal = Calendar.getInstance();
+        cal.set(year, month, date);
+        dueDate = cal.getTimeInMillis() / 1000;
         return this;
     }
 
@@ -42,8 +61,18 @@ public class Item {
         final Item item = new Item();
         item.uuid = nativeItem.uuid;
         item.name = nativeItem.itemName;
-        item.dueDate = nativeItem.dueDate.longValue();
-        item.completionDate = nativeItem.completionDate.longValue();
+        if (nativeItem.dueDate != null) {
+            item.dueDate = nativeItem.dueDate.getValue().longValue();
+            if (item.dueDate == 0) {
+                item.dueDate = null;
+            }
+        }
+        if (nativeItem.completionDate != null) {
+            item.completionDate = nativeItem.completionDate.getValue().longValue();
+            if (item.completionDate == 0) {
+                item.completionDate = null;
+            }
+        }
         return item;
     }
 
@@ -60,6 +89,12 @@ public class Item {
     void create(Context context) {
         try (final Toodle toodle = new Toodle(context)) {
             toodle.createItem(this);
+        }
+    }
+
+    void update(Context context) {
+        try (final Toodle toodle = new Toodle(context)) {
+            toodle.updateItem(this);
         }
     }
 }

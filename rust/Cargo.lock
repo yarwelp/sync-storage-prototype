@@ -154,6 +154,10 @@ dependencies = [
 [[package]]
 name = "ffi-utils"
 version = "0.1.0"
+dependencies = [
+ "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "fuchsia-zircon"

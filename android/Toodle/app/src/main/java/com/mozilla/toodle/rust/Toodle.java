@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.mozilla.toodle.Item;
 import com.sun.jna.NativeLong;
+import com.sun.jna.ptr.NativeLongByReference;
 
 public class Toodle extends RustObject {
     static {
@@ -28,7 +29,24 @@ public class Toodle extends RustObject {
         JNA.INSTANCE.toodle_create_item(
                 rawPointer,
                 item.name(),
-                item.dueDate()
+                new NativeLongByReference(new NativeLong(item.dueDate()))
+        );
+    }
+
+    public void updateItem(Item item) {
+        final NativeLongByReference completionDateRef;
+        if (item.completionDate() != null) {
+            completionDateRef = new NativeLongByReference(new NativeLong(item.completionDate()));
+        } else {
+            completionDateRef = null;
+        }
+
+        JNA.INSTANCE.toodle_update_item_by_uuid(
+                rawPointer,
+                item.uuid(),
+                item.name(),
+                new NativeLongByReference(new NativeLong(item.dueDate())),
+                completionDateRef
         );
     }
 

@@ -1,9 +1,15 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package com.mozilla.toodle.rust;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
+import com.sun.jna.ptr.NativeLongByReference;
 
 import java.io.Closeable;
 import java.util.Arrays;
@@ -18,8 +24,8 @@ public class NativeItem extends Structure implements Closeable {
 
     public String uuid;
     public String itemName;
-    public NativeLong dueDate;
-    public NativeLong completionDate;
+    @Nullable public NativeLongByReference dueDate;
+    @Nullable public NativeLongByReference completionDate;
 
     @Override
     protected List<String> getFieldOrder() {

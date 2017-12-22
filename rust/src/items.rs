@@ -20,7 +20,6 @@ pub use edn::{
     Utc,
 };
 use mentat_core::{
-    TypedValue,
     Uuid,
 };
 use time::Timespec;
@@ -32,7 +31,6 @@ use ffi_utils::strings::{
 use labels::Label;
 use store::{
     Entity,
-    ToInner
 };
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
