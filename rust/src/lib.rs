@@ -41,7 +41,10 @@ pub mod errors;
 pub mod ctypes;
 
 use errors as list_errors;
-use ffi_utils::strings::c_char_to_string;
+use ffi_utils::strings::{
+    c_char_to_string,
+    optional_timespec
+};
 use ffi_utils::log;
 use labels::Label;
 use items::{
@@ -492,37 +495,34 @@ pub unsafe extern "C" fn item_c_destroy(item: *mut ItemC) -> *mut ItemC {
     Box::into_raw(item)
 }
 
-fn do_update_item(manager: &mut Toodle, item: &Item, name: *const c_char, due_date: *const time_t, completion_date: *const time_t, labels: &Vec<Label>) {
-    let name = Some(c_char_to_string(name));
-    let due: Option<Timespec>;
-    if !due_date.is_null() {
-        due = Some(Timespec::new(due_date as i64, 0));
-    } else {
-        due = None;
-    }
-    let completion: Option<Timespec>;
-    if !completion_date.is_null() {
-        completion = Some(Timespec::new(completion_date as i64, 0));
-    } else {
-        completion = None;
-    }
-    let _ = manager.update_item(&item, name, due, completion, Some(&labels));
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn toodle_update_item(manager: *mut Toodle, item: *const Item, name: *const c_char, due_date: *const time_t, completion_date: *const time_t, labels: *const Vec<Label>) {
     let manager = &mut*manager;
     let item = &*item;
     let labels = &*labels;
-    do_update_item(manager, item, name, due_date, completion_date, labels);
+    let _ = manager.update_item(
+        &item,
+        Some(c_char_to_string(name)),
+        optional_timespec(due_date),
+        optional_timespec(completion_date),
+        Some(&labels)
+    );
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn toodle_update_item_by_uuid(manager: *mut Toodle, uuid: *const c_char, name: *const c_char, due_date: *const time_t, completion_date: *const time_t) {
     let manager = &mut*manager;
     // TODO proper error handling, see https://github.com/mozilla-prototypes/sync-storage-prototype/pull/6
-    let item = manager.fetch_item(&Uuid::from_str(c_char_to_string(uuid).as_str()).expect("parsed uuid")).expect("item from uuid").unwrap();
-    do_update_item(manager, &item, name, due_date, completion_date, &item.labels);
+    let item = manager.fetch_item(
+        &Uuid::from_str(c_char_to_string(uuid).as_str()).expect("parsed uuid")
+    ).expect("item from uuid").unwrap();
+    let _ = manager.update_item(
+        &item,
+        Some(c_char_to_string(name)),
+        optional_timespec(due_date),
+        optional_timespec(completion_date),
+        Some(&item.labels)
+    );
 
     if let Some(callback) = CHANGED_CALLBACK {
         callback();

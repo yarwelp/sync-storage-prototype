@@ -8,14 +8,10 @@ package com.mozilla.toodle;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 
 public class ToodleActivity extends Activity {
     private RecyclerView listRecyclerView;
@@ -33,6 +29,7 @@ public class ToodleActivity extends Activity {
         listRecyclerView.setLayoutManager(layoutManager);
 
         listAdapter = new ListAdapter(getApplicationContext());
+        listAdapter.setHasStableIds(true);
         listRecyclerView.setAdapter(listAdapter);
 
         final FloatingActionButton newItemBtn = findViewById(R.id.newItem);

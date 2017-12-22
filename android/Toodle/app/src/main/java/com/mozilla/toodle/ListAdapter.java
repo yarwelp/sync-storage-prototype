@@ -6,12 +6,15 @@
 package com.mozilla.toodle;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -20,14 +23,14 @@ import com.mozilla.toodle.rust.NativeItemsCallback;
 import com.mozilla.toodle.rust.NativeItemsChangedCallback;
 import com.mozilla.toodle.rust.Toodle;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
+    private static final String LOG_TAG = "RustyToodleJavaLA";
+
     private List<Item> dataset = new ArrayList<>(0);
     private final Context context;
 
@@ -45,20 +48,26 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
                 return;
             }
 
-            Log.i("RustyToodleJava", "Items changed!");
+            Log.i(LOG_TAG, "Items changed!");
             try (final Toodle toodle = new Toodle(listAdapter.context)) {
                 toodle.getAllItems(new NativeItemsCallback() {
                     @Override
                     public void items(@Nullable NativeItemSet.ByReference itemSet) {
-                        Log.i("RustyToodleJava", "Got the itemSet");
                         if (itemSet == null) {
-                            Log.i("RustyToodleJava", "Got no items!");
+                            Log.i(LOG_TAG, "Got no items!");
                             listAdapter.dataset = new ArrayList<>(0);
                             return;
                         }
-                        Log.i("RustyToodleJava", "Got " + itemSet.size() + " items!");
+                        Log.i(LOG_TAG, "Got " + itemSet.size() + " items!");
                         listAdapter.dataset = Item.fromNativeItems(itemSet.getItems());
-                        listAdapter.notifyDataSetChanged();
+
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                listAdapter.notifyDataSetChanged();
+                            }
+                        });
+
                         itemSet.close();
                     }
                 });
@@ -114,10 +123,12 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         final Long completionDate = item.completionDate();
         final CheckBox itemDoneCheckbox = holder.itemView.findViewById(R.id.itemDone);
         itemDoneCheckbox.setChecked(completionDate != null);
-        itemDoneCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        itemDoneCheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+            public void onClick(View v) {
+                boolean currentState = ((CheckBox) v).isChecked();
+                final Item item = dataset.get(holder.getAdapterPosition());
+                if (currentState) {
                     item.completionDate(System.currentTimeMillis());
                 } else {
                     item.completionDate(null);
@@ -130,5 +141,10 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return dataset.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return dataset.get(position).uuid().hashCode();
     }
 }
