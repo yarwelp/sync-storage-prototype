@@ -1,8 +1,9 @@
-# sync-storage-prototypes
+# Toodle: cross-platform, Rust-powered TODO app
 
-This is an example project demonstrating Rust-based generic storage and syncing on multiple platforms.
+This is an example project demonstrating Rust-based generic storage and syncing for iOS, Android and Firefox's WebExtension.
 
-# Building
+# iOS
+## Building
 
 First, we have to [install Xcode](https://itunes.apple.com/us/app/xcode/id497799835?ls=1&amp;mt=12) and then set up Xcode build tools. If you already have the build tools installed and they are up to date, you can skip this step.
 
@@ -36,3 +37,11 @@ Open `ios/Toodle/Toodle.xcodeproj` in Xcode. Select the Toodle project from the 
 
 You should now be able to build and run your iOS app.
 
+# Android
+{TODO}
+* Configure Rust build environment as per https://mozilla.github.io/firefox-browser-architecture/experiments/2017-09-21-rust-on-android.html
+* Build for all architectures via helper script `rust/android_build_all.sh`
+* Load the `android/Toodle` project in Android Studio, and run it on an API26 emulator
+
+# WebExtension
+{TODO}
