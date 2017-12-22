@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -98,7 +99,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         final Item item = dataset.get(position);
         ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(item.name());
         final Long dueDate = item.dueDate();
@@ -111,7 +112,19 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             );
         }
         final Long completionDate = item.completionDate();
-        ((CheckBox) holder.itemView.findViewById(R.id.itemDone)).setChecked(completionDate != null);
+        final CheckBox itemDoneCheckbox = holder.itemView.findViewById(R.id.itemDone);
+        itemDoneCheckbox.setChecked(completionDate != null);
+        itemDoneCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    item.completionDate(System.currentTimeMillis());
+                } else {
+                    item.completionDate(null);
+                }
+                item.update(context);
+            }
+        });
     }
 
     @Override

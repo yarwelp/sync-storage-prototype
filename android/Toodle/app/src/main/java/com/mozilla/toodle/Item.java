@@ -29,12 +29,25 @@ public class Item {
         return this;
     }
 
+    public String uuid() {
+        return uuid;
+    }
+
     public Long dueDate() {
         return dueDate;
     }
 
     public Long completionDate() {
         return completionDate;
+    }
+
+    Item completionDate(Long timestamp) {
+        if (timestamp == null) {
+            completionDate = null;
+        } else {
+            completionDate = timestamp / 1000;
+        }
+        return this;
     }
 
     Item dueDate(final int year, final int month, final int date) {
@@ -76,6 +89,12 @@ public class Item {
     void create(Context context) {
         try (final Toodle toodle = new Toodle(context)) {
             toodle.createItem(this);
+        }
+    }
+
+    void update(Context context) {
+        try (final Toodle toodle = new Toodle(context)) {
+            toodle.updateItem(this);
         }
     }
 }

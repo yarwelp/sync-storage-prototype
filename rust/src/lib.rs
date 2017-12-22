@@ -21,12 +21,8 @@ extern crate uuid;
 
 extern crate ffi_utils;
 
-use libc::{ c_int, size_t, time_t };
+use libc::{ c_int, time_t };
 use std::os::raw::c_char;
-use std::sync::{
-    Arc,
-    RwLock,
-};
 use std::ffi::CString;
 use mentat::query::{
     IntoResult,
@@ -36,9 +32,6 @@ use mentat::query::{
 use mentat_core::{
     TypedValue,
     Uuid,
-};
-use rusqlite::{
-    Connection
 };
 use time::Timespec;
 
@@ -66,6 +59,7 @@ use store::{
     ToInner,
     ToTypedValue,
 };
+use std::str::FromStr;
 
 // TODO this is pretty horrible and rather crafty, but I couldn't get this to live
 // inside a Toodle struct and be able to mutate it...
@@ -79,13 +73,14 @@ pub struct Toodle {
 
 impl Toodle {
     fn new(uri: String) -> Result<Toodle, errors::Error> {
-        let mut store_result = Store::new_store(uri)?;
+        let store_result = Store::new_store(uri)?;
         let mut toodle = Toodle {
             connection: store_result,
         };
 
-        toodle.transact_labels_vocabulary();
-        toodle.transact_items_vocabulary();
+        // TODO proper error handling at the FFI boundary
+        toodle.transact_labels_vocabulary().expect("transacted");
+        toodle.transact_items_vocabulary().expect("transacted");
 
         Ok(toodle)
     }
@@ -381,7 +376,7 @@ impl Toodle {
 #[no_mangle]
 pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
     let uri = c_char_to_string(uri);
-    let mut toodle = Toodle::new(uri).expect("expected a toodle");
+    let toodle = Toodle::new(uri).expect("expected a toodle");
     Box::into_raw(Box::new(toodle))
 }
 
@@ -418,7 +413,6 @@ pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c
     if let Some(callback) = CHANGED_CALLBACK {
         callback();
     }
-    let return_item: Option<ItemC>;
     if let Some(i) = item {
         return Box::into_raw(Box::new(i.into()));
     }
@@ -498,11 +492,7 @@ pub unsafe extern "C" fn item_c_destroy(item: *mut ItemC) -> *mut ItemC {
     Box::into_raw(item)
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn toodle_update_item(manager: *mut Toodle, item: *const Item, name: *const c_char, due_date: *const size_t, completion_date: *const size_t, labels: *const Vec<Label>) {
-    let manager = &mut*manager;
-    let item = &*item;
-    let labels = &*labels;
+fn do_update_item(manager: &mut Toodle, item: &Item, name: *const c_char, due_date: *const time_t, completion_date: *const time_t, labels: &Vec<Label>) {
     let name = Some(c_char_to_string(name));
     let due: Option<Timespec>;
     if !due_date.is_null() {
@@ -516,7 +506,27 @@ pub unsafe extern "C" fn toodle_update_item(manager: *mut Toodle, item: *const I
     } else {
         completion = None;
     }
-    let _ = manager.update_item(item, name, due, completion, Some(labels));
+    let _ = manager.update_item(&item, name, due, completion, Some(&labels));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn toodle_update_item(manager: *mut Toodle, item: *const Item, name: *const c_char, due_date: *const time_t, completion_date: *const time_t, labels: *const Vec<Label>) {
+    let manager = &mut*manager;
+    let item = &*item;
+    let labels = &*labels;
+    do_update_item(manager, item, name, due_date, completion_date, labels);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn toodle_update_item_by_uuid(manager: *mut Toodle, uuid: *const c_char, name: *const c_char, due_date: *const time_t, completion_date: *const time_t) {
+    let manager = &mut*manager;
+    // TODO proper error handling, see https://github.com/mozilla-prototypes/sync-storage-prototype/pull/6
+    let item = manager.fetch_item(&Uuid::from_str(c_char_to_string(uuid).as_str()).expect("parsed uuid")).expect("item from uuid").unwrap();
+    do_update_item(manager, &item, name, due_date, completion_date, &item.labels);
+
+    if let Some(callback) = CHANGED_CALLBACK {
+        callback();
+    }
 }
 
 #[no_mangle]
