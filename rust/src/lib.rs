@@ -10,7 +10,6 @@
 
 #[macro_use] extern crate error_chain;
 
-extern crate libc;
 extern crate edn;
 extern crate mentat;
 extern crate mentat_core;
@@ -19,11 +18,6 @@ extern crate store;
 extern crate time;
 extern crate uuid;
 
-extern crate ffi_utils;
-
-use libc::{ c_int, time_t };
-use std::os::raw::c_char;
-use std::ffi::CString;
 use mentat::query::{
     IntoResult,
     QueryExecutionResult,
@@ -38,23 +32,12 @@ use time::Timespec;
 pub mod labels;
 pub mod items;
 pub mod errors;
-pub mod ctypes;
 
 use errors as list_errors;
-use ffi_utils::strings::{
-    c_char_to_string,
-    optional_timespec
-};
-use ffi_utils::log;
-use labels::Label;
-use items::{
+pub use labels::Label;
+pub use items::{
     Item,
     Items
-};
-use ctypes::{
-    ItemC,
-    ItemsC,
-    ItemCList
 };
 use store::{
     Store,
@@ -62,11 +45,6 @@ use store::{
     ToInner,
     ToTypedValue,
 };
-use std::str::FromStr;
-
-// TODO this is pretty horrible and rather crafty, but I couldn't get this to live
-// inside a Toodle struct and be able to mutate it...
-static mut CHANGED_CALLBACK: Option<extern fn()> = None;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -75,7 +53,7 @@ pub struct Toodle {
 }
 
 impl Toodle {
-    fn new(uri: String) -> Result<Toodle, errors::Error> {
+    pub fn new(uri: String) -> Result<Toodle, errors::Error> {
         let store_result = Store::new_store(uri)?;
         let mut toodle = Toodle {
             connection: store_result,
@@ -95,8 +73,8 @@ fn create_uuid() -> Uuid {
 
 fn return_date_field(results: QueryExecutionResult) -> Result<Option<Timespec>, list_errors::Error> {
     results.into_scalar_result()
-            .map(|o| o.and_then(|ts| ts.to_inner()))
-            .map_err(|e| e.into())
+        .map(|o| o.and_then(|ts| ts.to_inner()))
+        .map_err(|e| e.into())
 }
 
 impl Toodle {
@@ -230,7 +208,7 @@ impl Toodle {
                         [?eid :item/uuid ?uuid]
                         [?eid :item/name ?name]
         ]"#;
-        
+
         self.connection
             .query(query)
             .into_rel_result()
@@ -282,11 +260,11 @@ impl Toodle {
     pub fn create_item(&mut self, item: &Item) -> Result<Uuid, list_errors::Error> {
         // TODO: make this mapping better!
         let label_str = item.labels
-                            .iter()
-                            .filter(|label| label.id.is_some() )
-                            .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
-                            .collect::<Vec<String>>()
-                            .join(", ");
+            .iter()
+            .filter(|label| label.id.is_some() )
+            .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+            .collect::<Vec<String>>()
+            .join(", ");
         let item_uuid = create_uuid();
         let uuid_string = item_uuid.hyphenated().to_string();
         let mut query = format!(r#"[{{
@@ -350,18 +328,18 @@ impl Toodle {
             let existing_labels = self.fetch_labels_for_item(&(item.uuid)).unwrap_or(vec![]);
 
             let labels_to_add = new_labels.iter()
-                                        .filter(|label| !existing_labels.contains(label) && label.id.is_some() )
-                                        .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
-                                        .collect::<Vec<String>>()
-                                        .join(", ");
+                .filter(|label| !existing_labels.contains(label) && label.id.is_some() )
+                .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                .collect::<Vec<String>>()
+                .join(", ");
             if !labels_to_add.is_empty() {
                 transaction.push(format!("[:db/add {0} :item/label [{1}]]", &item_id.id, labels_to_add));
             }
             let labels_to_remove = existing_labels.iter()
-                                        .filter(|label| !new_labels.contains(label) && label.id.is_some() )
-                                        .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
-                                        .collect::<Vec<String>>()
-                                        .join(", ");
+                .filter(|label| !new_labels.contains(label) && label.id.is_some() )
+                .map(|label|  format!("{}", label.id.clone().map::<i64, _>(|e| e.into()).unwrap()) )
+                .collect::<Vec<String>>()
+                .join(", ");
             if !labels_to_remove.is_empty() {
                 transaction.push(format!("[:db/retract {0} :item/label [{1}]]", &item_id.id, labels_to_remove));
             }
@@ -374,168 +352,6 @@ impl Toodle {
             .map(|_| ())
             .map_err(|e| e.into())
     }
-}
-
-#[no_mangle]
-pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
-    let uri = c_char_to_string(uri);
-    let toodle = Toodle::new(uri).expect("expected a toodle");
-    Box::into_raw(Box::new(toodle))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_destroy(toodle: *mut Toodle) {
-    let _ = Box::from_raw(toodle);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_get_all_labels(manager: *const Toodle) -> *mut Vec<Label> {
-    let manager = &*manager;
-    let label_list = Box::new(manager.fetch_labels().unwrap_or(vec![]));
-    Box::into_raw(label_list)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_create_item(manager: *mut Toodle, name: *const c_char, due_date: *const time_t) -> *mut ItemC {
-    let name = c_char_to_string(name);
-    log::d(&format!("Creating item: {:?}, {:?}, {:?}", name, due_date, manager)[..]);
-
-    let manager = &mut*manager;
-    let mut item = Item::default();
-
-    item.name = name;
-    let due: Option<Timespec>;
-    if !due_date.is_null() {
-        let due_date = *due_date as i64;
-        due = Some(Timespec::new(due_date, 0));
-    } else {
-        due = None;
-    }
-    item.due_date = due;
-    let item = manager.create_and_fetch_item(&item).expect("expected an item");
-    if let Some(callback) = CHANGED_CALLBACK {
-        callback();
-    }
-    if let Some(i) = item {
-        return Box::into_raw(Box::new(i.into()));
-    }
-    return std::ptr::null_mut();
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_on_items_changed(callback: extern fn()) {
-    CHANGED_CALLBACK = Some(callback);
-    callback();
-}
-
-// TODO: figure out callbacks in swift such that we can use `toodle_all_items` instead.
-#[no_mangle]
-pub unsafe extern "C" fn toodle_get_all_items(manager: *mut Toodle) -> *mut ItemCList {
-    let manager = &mut *manager;
-    let items: ItemsC = manager.fetch_items().map(|item| item.into()).expect("all items");
-    let count = items.vec.len();
-    let item_list = ItemCList {
-        items: items.vec.into_boxed_slice(),
-        len: count,
-    };
-
-    Box::into_raw(Box::new(item_list))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn item_list_entry_at(item_c_list: *mut ItemCList, index: c_int) -> *const ItemC {
-    let item_c_list = &*item_c_list;
-    let index = index as usize;
-    let item = Box::new(item_c_list.items[index].clone());
-    Box::into_raw(item)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn item_list_count(item_list: *mut ItemCList) -> c_int {
-    let item_list = &*item_list;
-    item_list.len as c_int
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_all_items(manager: *mut Toodle, callback: extern "C" fn(Option<&ItemCList>)) {
-    let manager = &*manager;
-    let items: ItemsC = manager.fetch_items().map(|item| item.into()).expect("all items");
-
-    // TODO there's bound to be a better way. Ideally this should just return an empty set,
-    // but I ran into problems while doing that.
-    let count = items.vec.len();
-
-    let set = ItemCList {
-        items: items.vec.into_boxed_slice(),
-        len: count,
-    };
-
-    let res = match count > 0 {
-        // NB: we're lending a set, it will be cleaned up automatically once 'callback' returns
-        true => Some(&set),
-        false => None
-    };
-
-    callback(res);
-}
-
-
-// TODO this is pretty crafty... Currently this setup means that ItemJNA could only be used
-// together with something like toodle_all_items - a function that will clear up ItemJNA itself.
-#[no_mangle]
-pub unsafe extern "C" fn item_c_destroy(item: *mut ItemC) -> *mut ItemC {
-    let item = Box::from_raw(item);
-
-    // Reclaim our strings and let Rust clear up their memory.
-    let _ = CString::from_raw(item.uuid);
-    let _ = CString::from_raw(item.name);
-
-    // Prevent Rust from clearing out item itself. It's already managed by toodle_all_items.
-    // If we'll let Rust clean up entirely here, we'll get an NPE in toodle_all_items.
-    Box::into_raw(item)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_update_item(manager: *mut Toodle, item: *const Item, name: *const c_char, due_date: *const time_t, completion_date: *const time_t, labels: *const Vec<Label>) {
-    let manager = &mut*manager;
-    let item = &*item;
-    let labels = &*labels;
-    let _ = manager.update_item(
-        &item,
-        Some(c_char_to_string(name)),
-        optional_timespec(due_date),
-        optional_timespec(completion_date),
-        Some(&labels)
-    );
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_update_item_by_uuid(manager: *mut Toodle, uuid: *const c_char, name: *const c_char, due_date: *const time_t, completion_date: *const time_t) {
-    let manager = &mut*manager;
-    // TODO proper error handling, see https://github.com/mozilla-prototypes/sync-storage-prototype/pull/6
-    let item = manager.fetch_item(
-        &Uuid::from_str(c_char_to_string(uuid).as_str()).expect("parsed uuid")
-    ).expect("item from uuid").unwrap();
-    let _ = manager.update_item(
-        &item,
-        Some(c_char_to_string(name)),
-        optional_timespec(due_date),
-        optional_timespec(completion_date),
-        Some(&item.labels)
-    );
-
-    if let Some(callback) = CHANGED_CALLBACK {
-        callback();
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_create_label(manager: *mut Toodle, name: *const c_char, color: *const c_char) -> *mut Option<Label> {
-    let manager = &mut*manager;
-    let name = c_char_to_string(name);
-    let color = c_char_to_string(color);
-    let label = Box::new(manager.create_label(name, color).unwrap_or(None));
-    Box::into_raw(label)
 }
 
 

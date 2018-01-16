@@ -18,7 +18,7 @@ use std::ptr;
 use mentat_core::Uuid;
 use time::Timespec;
 
-use items::{
+use toodle::items::{
     Item, Items
 };
 

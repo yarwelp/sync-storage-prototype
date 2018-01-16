@@ -8,14 +8,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::os::raw::c_char;
-
 use mentat_core::TypedValue;
 
-use ffi_utils::strings::{
-    string_to_c_char,
-    c_char_to_string,
-};
 use store::{
     Entity,
     ToInner
@@ -42,27 +36,4 @@ impl Label {
             color: row[2].clone().to_inner()
         })
     }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn label_destroy(label: *mut Label) {
-    let _ = Box::from_raw(label);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn label_get_name(label: *const Label) -> *mut c_char {
-    let label = &*label;
-    string_to_c_char(label.name.clone())
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn label_get_color(label: *const Label) -> *mut c_char {
-    let label = &*label;
-    string_to_c_char(label.color.clone())
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn label_set_color(label: *mut Label, color: *const c_char) {
-    let label = &mut*label;
-    label.color = c_char_to_string(color);
 }
